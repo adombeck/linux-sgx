@@ -40,16 +40,6 @@
 
 #include "Enclave_t.h"
 
-void printf(const char *fmt, ...)
-{
-    char buf[BUFSIZ] = {'\0'};
-    va_list ap;
-    va_start(ap, fmt);
-    vsnprintf(buf, BUFSIZ, fmt, ap);
-    va_end(ap);
-    print(buf);
-}
-
 uint32_t g_secret;
 sgx_thread_mutex_t g_mutex = SGX_THREAD_MUTEX_INITIALIZER;
 
@@ -80,7 +70,9 @@ int initialize_enclave(struct sealed_buf_t *sealed_buf)
     uint32_t len = sizeof(sgx_sealed_data_t) + sizeof(uint32_t);
     //Check the sealed_buf length and check the outside pointers deeply
     if(sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index)] == NULL ||
-        !sgx_is_outside_enclave(sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index)], len) )
+        sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index + 1)] == NULL ||
+        !sgx_is_outside_enclave(sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index)], len) ||
+        !sgx_is_outside_enclave(sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index + 1)], len))
     {
         print("Incorrect input parameter(s).\n");
         return -1;
@@ -101,14 +93,11 @@ int initialize_enclave(struct sealed_buf_t *sealed_buf)
     sgx_thread_mutex_lock(&g_mutex);
     memcpy(temp_sealed_buf, sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index)], len);
 
-    print("Unsealing data\n");
-
     // Unseal current sealed buf
     sgx_status_t ret = sgx_unseal_data((sgx_sealed_data_t *)temp_sealed_buf, plain_text, &plain_text_length, (uint8_t *)&unsealed_data, &unsealed_data_length);
     if(ret == SGX_SUCCESS)
     {
         g_secret = unsealed_data;
-				printf("Unsealed secret: %i\n", unsealed_data);
         sgx_thread_mutex_unlock(&g_mutex);
         free_allocated_memory(temp_sealed_buf);
         return 0;
@@ -127,7 +116,9 @@ int increase_and_seal_data(size_t tid, struct sealed_buf_t* sealed_buf)
     uint32_t sealed_len = sizeof(sgx_sealed_data_t) + sizeof(g_secret);
     // Check the sealed_buf length and check the outside pointers deeply
     if(sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index)] == NULL ||
-        !sgx_is_outside_enclave(sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index)], sealed_len))
+        sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index + 1)] == NULL ||
+        !sgx_is_outside_enclave(sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index)], sealed_len) ||
+        !sgx_is_outside_enclave(sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index + 1)], sealed_len))
     {
         print("Incorrect input parameter(s).\n");
         return -1;
@@ -158,8 +149,8 @@ int increase_and_seal_data(size_t tid, struct sealed_buf_t* sealed_buf)
         return -1;
     }
     // Backup the sealed data to outside buffer
-    memcpy(sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index)], temp_sealed_buf, sealed_len);
-//    sealed_buf->index++;
+    memcpy(sealed_buf->sealed_buf_ptr[MOD2(sealed_buf->index + 1)], temp_sealed_buf, sealed_len);
+    sealed_buf->index++;
 
     sgx_thread_mutex_unlock(&g_mutex);
     free_allocated_memory(temp_sealed_buf);

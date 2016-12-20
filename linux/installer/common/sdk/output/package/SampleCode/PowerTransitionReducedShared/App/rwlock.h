@@ -31,18 +31,27 @@
 
 
 
-#ifndef _TYPES_H_
-#define _TYPES_H_
 
-#define BUF_NUM 1
+#ifndef _RWLOCK_H
+#define _RWLOCK_H
 
-#define MOD2(x) ((x) % BUF_NUM)
+#include <pthread.h>
+typedef pthread_rwlock_t rwlock_t;
+typedef pthread_rwlock_t* prwlock_t;
 
-struct sealed_buf_t
-{
-	unsigned int index;
-	void* sealed_buf_ptr;
-};
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+    void wtlock(prwlock_t lock);
+    void rdlock(prwlock_t lock);
+    void rdunlock(prwlock_t lock);
+    void wtunlock(prwlock_t lock);
+    void init_rwlock(prwlock_t lock);
+    void fini_rwlock(prwlock_t lock);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

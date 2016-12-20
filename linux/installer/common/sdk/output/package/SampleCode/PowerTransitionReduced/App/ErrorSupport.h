@@ -30,19 +30,20 @@
  */
 
 
+#ifndef _ERROR_SUPPORT_H
+#define _ERROR_SUPPORT_H
 
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#include "sgx_error.h"
 
-#define BUF_NUM 1
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define MOD2(x) ((x) % BUF_NUM)
+void ret_error_support(sgx_status_t ret);
 
-struct sealed_buf_t
-{
-	unsigned int index;
-	void* sealed_buf_ptr;
-};
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

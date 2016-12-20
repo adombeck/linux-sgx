@@ -31,18 +31,54 @@
 
 
 
-#ifndef _TYPES_H_
-#define _TYPES_H_
+// rwlock.cpp: wrappers of Slim Reader/Writer (SRW) Locks
 
-#define BUF_NUM 1
+#include "rwlock.h"
 
-#define MOD2(x) ((x) % BUF_NUM)
 
-struct sealed_buf_t
+#include <stdlib.h>
+void wtlock(prwlock_t lock)
 {
-	unsigned int index;
-	void* sealed_buf_ptr;
-};
+    int ret = pthread_rwlock_wrlock(lock);
+    if(0 != ret)
+        abort();
+}
+
+void wtunlock(prwlock_t lock)
+{
+    int ret = pthread_rwlock_unlock(lock);
+    if(0 != ret)
+        abort();
+}
 
 
-#endif
+void rdlock(prwlock_t lock)
+{
+    int ret = pthread_rwlock_rdlock(lock);
+    if(0 != ret)
+        abort();
+}
+
+void rdunlock(prwlock_t lock)
+{
+    int ret = pthread_rwlock_unlock(lock);
+    if(0 != ret)
+        abort();
+}
+
+void init_rwlock(prwlock_t lock)
+{
+    //use the default attribute.
+    int ret = pthread_rwlock_init(lock, NULL);
+    if(0 != ret)
+        abort();
+}
+
+void fini_rwlock(prwlock_t lock)
+{
+    int ret = pthread_rwlock_destroy(lock);
+    if(0 != ret)
+        abort();
+}
+
+

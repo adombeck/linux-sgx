@@ -83,8 +83,6 @@ sgx_status_t load_and_initialize_enclave(sgx_enclave_id_t *eid, struct sealed_bu
             sgx_destroy_enclave(*eid);
         }
 	
-				fprintf(stderr, "Calling sgx_create_enclave()\n");
-
         // Step 2: load the enclave
         // Debug: set the 2nd parameter to 1 which indicates the enclave are launched in debug mode
         ret = sgx_create_enclave(ENCLAVE_NAME, SGX_DEBUG_FLAG, &token, &updated, eid, NULL);
@@ -102,8 +100,6 @@ sgx_status_t load_and_initialize_enclave(sgx_enclave_id_t *eid, struct sealed_bu
             else
                 ofs << token;
         }
-
-        fprintf(stderr, "Calling initialize_enclave()\n");
 
         // Step 3: enter the enclave to initialize the enclave
         //      If power transition occurs when the process is inside the enclave, SGX_ERROR_ENCLAVE_LOST will be returned after the system resumes.
@@ -138,7 +134,7 @@ bool increase_and_seal_data_in_enclave()
     sgx_enclave_id_t current_eid = 0;
 
     // Enter the enclave to increase and seal the secret data for 100 times.
-    for(unsigned int i = 0; i< 100; i++)
+    for(unsigned int i = 0; i< 50000; i++)
     {
         for( ; ; )
         {
@@ -152,8 +148,7 @@ bool increase_and_seal_data_in_enclave()
             rdunlock(&lock_eid);
             ret = increase_and_seal_data(current_eid, &retval, thread_id, &sealed_buf);
 
-//            if(ret == SGX_ERROR_ENCLAVE_LOST)
-            if(i++ == 50)
+            if(ret == SGX_ERROR_ENCLAVE_LOST)
             {
                 // SGX_ERROR_ENCLAVE_LOST indicates the power transition occurs before the system resumes.
                 // Lock here is to make sure there is only one thread to load and initialize the enclave at the same time
@@ -300,18 +295,16 @@ int main(int argc, char* argv[])
     cout << "Now enter a character ...";
     getchar();
 
-//    // Create multiple threads to calculate the sum
-//    thread trd[THREAD_NUM];
-//    for (int i = 0; i< THREAD_NUM; i++)
-//    {
-//        trd[i] = thread(thread_func);
-//    }
-//    for (int i = 0; i < THREAD_NUM; i++)
-//    {
-//        trd[i].join();
-//    }
-
-    thread_func();
+    // Create multiple threads to calculate the sum
+    thread trd[THREAD_NUM];
+    for (int i = 0; i< THREAD_NUM; i++)
+    {
+        trd[i] = thread(thread_func);
+    }
+    for (int i = 0; i < THREAD_NUM; i++)
+    {
+        trd[i].join();
+    }
 
     // Release resources
     release_source();

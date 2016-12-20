@@ -38,11 +38,4 @@
 
 #define MOD2(x) ((x) % BUF_NUM)
 
-struct sealed_buf_t
-{
-	unsigned int index;
-	void* sealed_buf_ptr;
-};
-
-
 #endif

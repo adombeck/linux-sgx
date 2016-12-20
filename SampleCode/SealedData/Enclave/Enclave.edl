@@ -30,19 +30,20 @@
  */
 
 
+enclave {
+	
+	// Import the Ocalls for trusted mutex
+	from "sgx_tstdc.edl" import *;
+	include "types.h"
+	include "sgx_tseal.h"
 
-#ifndef _TYPES_H_
-#define _TYPES_H_
+    trusted {
+		public int  initialize_enclave();
+		public int  unseal([in]sgx_sealed_data_t** p_sealed_buf, [out] uint32_t* p_secret);
+		public int  seal([in, out]sgx_sealed_data_t** p_sealed_buf, [in] uint32_t* p_secret);
+    };
 
-#define BUF_NUM 1
-
-#define MOD2(x) ((x) % BUF_NUM)
-
-struct sealed_buf_t
-{
-	unsigned int index;
-	void* sealed_buf_ptr;
+    untrusted {
+		void print([in, string] const char *string);
+    };
 };
-
-
-#endif
