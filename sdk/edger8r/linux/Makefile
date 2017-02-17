@@ -42,7 +42,8 @@ build:
 $(BUILD_DIR):
 	@$(MKDIR) $@
 
+#	@ocamlbuild Edger8r.native -clean
 .PHONY:
 clean:
-	@ocamlbuild Edger8r.native -clean
+	@$(RM) -rf _build
 	@$(RM) $(BUILD_DIR)/sgx_edger8r
