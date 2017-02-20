@@ -4,6 +4,8 @@ set -e
 
 exec 5>&1
 
+[[ -d external/ippcp_internal/inc ]] || ./download_prebuilt.sh
+
 echo "Building..."
 # make DEBUG=1
 
