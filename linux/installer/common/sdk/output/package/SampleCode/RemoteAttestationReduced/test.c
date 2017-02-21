@@ -31,12 +31,16 @@
 
 
 #include "assert.h"
-#include "isv_enclave_t.h"
+#include "test_t.h"
 #include "sgx_tkey_exchange.h"
 #include "sgx_tcrypto.h"
 #include "string.h"
 
 #include <stdio.h>
+
+#define true 1
+#define false 0
+
 
 // This is the public EC key of the SP. The corresponding private EC key is
 // used by the SP to sign data used in the remote attestation SIGMA protocol
@@ -86,7 +90,7 @@ const char ID_U[] = "SGXRAENCLAVE";
 const char ID_V[] = "SGXRASERVER";
 
 // Derive two keys from shared key and key id.
-bool derive_key(
+int derive_key(
     const sgx_ec256_dh_shared_t *p_shared_key,
     uint8_t key_id,
     sgx_ec_key_128bit_t *first_derived_key,
@@ -165,7 +169,7 @@ sgx_status_t key_derivation(const sgx_ec256_dh_shared_t* shared_key,
     sgx_ec_key_128bit_t* mk_key,
     sgx_ec_key_128bit_t* vk_key)
 {
-    bool derive_ret = false;
+    int derive_ret = false;
 
     if (NULL == shared_key)
     {
@@ -376,7 +380,7 @@ sgx_status_t put_secret_data(
                                             (p_gcm_mac));
 
         uint32_t i;
-        bool secret_match = true;
+        int secret_match = true;
         for(i=0;i<secret_size;i++)
         {
             if(g_secret[i] != i)
@@ -401,5 +405,9 @@ sgx_status_t put_secret_data(
 
 int main()
 {
+//	exit(0);
   printf("Test\n");
+  sgx_create_pse_session();
+
+  printf("Test passed\n");
 }

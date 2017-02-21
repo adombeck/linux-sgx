@@ -1,7 +1,7 @@
 #!$(PAL)
 
 loader.preload = file:$(RUNTIME)/libsysdb.so
-loader.exec = file:./isv_enclave.so
+loader.exec = file:./test.so
 loader.execname = test
 loader.env.LD_LIBRARY_PATH = /graphene:/host:/usr/lib:/usr/lib/x86_64-linux-gnu
 loader.env.PATH = /usr/bin:/bin
