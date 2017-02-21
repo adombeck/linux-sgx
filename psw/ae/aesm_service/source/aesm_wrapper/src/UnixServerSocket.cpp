@@ -64,8 +64,8 @@ void UnixServerSocket::init()
 
     server_address.sun_family = AF_UNIX;
     memset(server_address.sun_path, 0, sizeof(server_address.sun_path));
-    // leave the first byte to 0 in order to have an abstract socket address
-    strncpy(server_address.sun_path + 1, mSocketBase, sizeof(server_address.sun_path) - 1);
+    // We do NOT set the first byte to 0 here, because we do NOT want an abstract socket address
+    strncpy(server_address.sun_path, mSocketBase, sizeof(server_address.sun_path) - 1);
     unlink(server_address.sun_path);
 
     socklen_t server_len = sizeof(server_address);
