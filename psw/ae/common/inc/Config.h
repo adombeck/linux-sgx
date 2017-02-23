@@ -36,6 +36,11 @@
 #define CONFIG_SOCKET_PATH "/tmp/aesmd.socket"
 #endif /* CONFIG_SOCKET_PATH */
 
+#ifndef CONFIG_AESMD_PORT
+#define CONFIG_AESMD_PORT 34343
+#endif /* CONFIG_AESMD_PORT */
+
+
 
 #define MAX_MEMORY_ALLOCATION 1<<25 //32 MB
 #define IPC_LATENCY           10000      

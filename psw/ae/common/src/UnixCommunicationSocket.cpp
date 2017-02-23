@@ -32,8 +32,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <stdlib.h>
+#include<arpa/inet.h>
 
 #include <IAERequest.h>
 #include <IAEResponse.h>
@@ -197,25 +197,23 @@ char* UnixCommunicationSocket::readRaw(ssize_t length)
     return recBuf;
 }
 
-//this will connect to the AESM by opening an Unix Socket
+//this will connect to the AESM via TCP
 bool UnixCommunicationSocket::init()
 {
     //init will always return directly with success if object was created with pre-existent socket
     if (mSocket == -1)
     {
-        struct sockaddr_un serv_addr;
+        struct sockaddr_in serv_addr;
 
-        mSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+        mSocket = socket(AF_INET, SOCK_STREAM, 0);
         if(mSocket < 0)
         {
             return false;
         }
 
-        memset(&serv_addr, 0, sizeof(struct sockaddr_un));
-        serv_addr.sun_family = AF_UNIX;
-        memset(serv_addr.sun_path, 0, sizeof(serv_addr.sun_path));
-        // leave the first byte to 0 in order to have an abstract socket address
-        strncpy(serv_addr.sun_path + 1, mSocketBase, sizeof(serv_addr.sun_path) - 1);
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_port = htons(CONFIG_AESMD_PORT);
+        serv_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
         if( connect(mSocket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0)
         {

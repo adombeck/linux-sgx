@@ -31,8 +31,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+#include<arpa/inet.h>
+
+#include <Config.h>
 
 #include "NonBlockingUnixCommunicationSocket.h"
 #include "UnixServerSocket.h"
@@ -55,18 +59,18 @@ void UnixServerSocket::init()
     if (mSocket > 0)
         return;
 
-    struct sockaddr_un server_address;
+    struct sockaddr_in server_address;
 
-    mSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+    mSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (mSocket < 0) {
         throw("Failed to create socket");
     }
 
-    server_address.sun_family = AF_UNIX;
-    memset(server_address.sun_path, 0, sizeof(server_address.sun_path));
-    // We do NOT set the first byte to 0 here, because we do NOT want an abstract socket address
-    strncpy(server_address.sun_path, mSocketBase, sizeof(server_address.sun_path) - 1);
-    unlink(server_address.sun_path);
+
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(CONFIG_AESMD_PORT);
+    server_address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
 
     socklen_t server_len = sizeof(server_address);
     int rc = bind(mSocket, (sockaddr*)&server_address, server_len);
@@ -74,6 +78,8 @@ void UnixServerSocket::init()
         close(mSocket);
         throw("Failed to create socket");
     }
+
+    chmod(mSocketBase, 0777);
 
     rc = listen(mSocket, 32);
     if (rc < 0) {
