@@ -28,23 +28,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <NonBlockingUnixCommunicationSocket.h>
-#include <NonBlockingUnixSocketFactory.h>
+#ifndef __AE_UNIX_SOCKET_FACTORY_H
+#define __AE_UNIX_SOCKET_FACTORY_H
 
-ICommunicationSocket* NonBlockingUnixSocketFactory::NewCommunicationSocket()
+#include <ISocketFactory.h>
+
+class TCPSocketFactory : public ISocketFactory
 {
-    NonBlockingUnixCommunicationSocket* sock = new NonBlockingUnixCommunicationSocket(mSocketBase);
-    bool initializationSuccessfull = false;
+public:
+    TCPSocketFactory();
+    ~TCPSocketFactory();
 
-    if (sock != NULL)
-        initializationSuccessfull = sock->init();
+    ICommunicationSocket* NewCommunicationSocket();
 
-    if (initializationSuccessfull == false)
-    {
-        delete sock;
-        sock = NULL;
-    }
+private:
+    TCPSocketFactory(const TCPSocketFactory&);                 // Prevent copy-construction
+    TCPSocketFactory& operator=(const TCPSocketFactory&);      // Prevent assignment
 
-    return sock;
+};
 
-}
+#endif

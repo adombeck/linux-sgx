@@ -236,11 +236,11 @@ IPC_SRC  :=  AECloseSessionRequest.cpp    \
              AEReportAttestationResponse.cpp \
              SocketTransporter.cpp \
              AEGetLaunchTokenResponse.cpp  \
-             UnixCommunicationSocket.cpp \
-             NonBlockingUnixCommunicationSocket.cpp \
+             TCPCommunicationSocket.cpp \
+             NonBlockingTCPCommunicationSocket.cpp \
              AEGetQuoteRequest.cpp \
-             UnixSocketFactory.cpp \
-             NonBlockingUnixSocketFactory.cpp
+             TCPSocketFactory.cpp \
+             NonBlockingTCPSocketFactory.cpp
 
 PROTOBUF_SRC  := messages.pb.cc
 
@@ -251,7 +251,7 @@ AESM_SRC  := AESMLogicWrapper.cpp  \
              AESMWorkerThread.cpp   \
              AESMQueueManager.cpp  \
              CSelector.cpp    \
-             UnixServerSocket.cpp \
+             TCPServerSocket.cpp \
              ./source/oal/aesm_util.cpp \
              aesm_config.cpp 
 

@@ -32,52 +32,38 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <stdlib.h>
+#include<arpa/inet.h>
 
 #include <IAERequest.h>
 #include <IAEResponse.h>
 
-#include <UnixCommunicationSocket.h>
+#include <TCPCommunicationSocket.h>
+#include <SocketConfig.h>
 
 
-UnixCommunicationSocket::UnixCommunicationSocket(const char* socketbase)
-:mSocketBase(NULL), mWasTimeout(false), mTimeoutMseconds(0)
+TCPCommunicationSocket::TCPCommunicationSocket()
+:mWasTimeout(false), mTimeoutMseconds(0)
 {
-    //doing all this manually to ensure <new> based memory allocation across the solution
-    size_t size = strlen(socketbase) + 1;
-    //ensure a fairly decend size for socketbase is not overflowed
-    if (size > 255)
-        return;     //a socketbase of more than 255 chars may break the system on connect
-
-    mSocketBase = new char[size];
-    memset(mSocketBase, 0, size);
-    strncpy(mSocketBase, socketbase, size);
-
     mSocket = -1;
 
     memset(&mStartTime, 0, sizeof(struct timeval));
 }
 
-UnixCommunicationSocket::UnixCommunicationSocket(int socket)
-:mSocketBase(NULL), mWasTimeout(false), mTimeoutMseconds(0)
+TCPCommunicationSocket::TCPCommunicationSocket(int socket)
+:mWasTimeout(false), mTimeoutMseconds(0)
 {
     mSocket = socket;
 
     memset(&mStartTime, 0, sizeof(struct timeval));
 }
 
-UnixCommunicationSocket::~UnixCommunicationSocket()
+TCPCommunicationSocket::~TCPCommunicationSocket()
 {
     disconnect();
-    if (mSocketBase != NULL)
-    {
-        delete [] mSocketBase;
-        mSocketBase = NULL;
-    }
 }
 
-void UnixCommunicationSocket::disconnect()
+void TCPCommunicationSocket::disconnect()
 {
     if (mSocket != -1){
         close(mSocket);
@@ -85,7 +71,7 @@ void UnixCommunicationSocket::disconnect()
     }
 }
 
-bool UnixCommunicationSocket::setTimeout(uint32_t timeout_milliseconds)
+bool TCPCommunicationSocket::setTimeout(uint32_t timeout_milliseconds)
 {
     struct timeval timeout;      
 
@@ -107,12 +93,12 @@ bool UnixCommunicationSocket::setTimeout(uint32_t timeout_milliseconds)
     return true;
 }
 
-void UnixCommunicationSocket::MarkStartTime()
+void TCPCommunicationSocket::MarkStartTime()
 {
     gettimeofday(&mStartTime,NULL);
 }
 
-bool UnixCommunicationSocket::CheckForTimeout()
+bool TCPCommunicationSocket::CheckForTimeout()
 {
     mWasTimeout = false;
 
@@ -136,7 +122,7 @@ bool UnixCommunicationSocket::CheckForTimeout()
     return false;
 }
 
-ssize_t UnixCommunicationSocket::writeRaw(const char* data, ssize_t length)
+ssize_t TCPCommunicationSocket::writeRaw(const char* data, ssize_t length)
 {
     MarkStartTime();
 
@@ -160,7 +146,7 @@ ssize_t UnixCommunicationSocket::writeRaw(const char* data, ssize_t length)
     return written;
 }
 
-char* UnixCommunicationSocket::readRaw(ssize_t length)
+char* TCPCommunicationSocket::readRaw(ssize_t length)
 {
     if (mSocket == -1)
         return NULL;
@@ -191,25 +177,23 @@ char* UnixCommunicationSocket::readRaw(ssize_t length)
     return recBuf;
 }
 
-//this will connect to the AESM by opening an Unix Socket
-bool UnixCommunicationSocket::init()
+//this will connect to the AESM via TCP
+bool TCPCommunicationSocket::init()
 {
     //init will always return directly with success if object was created with pre-existent socket
     if (mSocket == -1)
     {
-        struct sockaddr_un serv_addr;
+        struct sockaddr_in serv_addr;
 
-        mSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+        mSocket = socket(AF_INET, SOCK_STREAM, 0);
         if(mSocket < 0)
         {
             return false;
         }
 
-        memset(&serv_addr, 0, sizeof(struct sockaddr_un));
-        serv_addr.sun_family = AF_UNIX;
-        memset(serv_addr.sun_path, 0, sizeof(serv_addr.sun_path));
-        // leave the first byte to 0 in order to have an abstract socket address
-        strncpy(serv_addr.sun_path + 1, mSocketBase, sizeof(serv_addr.sun_path) - 1);
+        serv_addr.sin_family = AF_INET;
+        serv_addr.sin_port = htons(CONFIG_AESMD_PORT);
+        serv_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
         if( connect(mSocket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) != 0)
         {
@@ -221,6 +205,6 @@ bool UnixCommunicationSocket::init()
     return true;
 }
 
-int UnixCommunicationSocket::getSockDescriptor() {
+int TCPCommunicationSocket::getSockDescriptor() {
     return mSocket;
 }

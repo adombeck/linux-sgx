@@ -28,38 +28,71 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include <UnixSocketFactory.h>
-#include <UnixCommunicationSocket.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
+#include<arpa/inet.h>
 
-#include <stdlib.h>
-#include <string.h>
+#include <SocketConfig.h>
 
-#define MAX_SIZE 255
+#include "NonBlockingTCPCommunicationSocket.h"
+#include "TCPServerSocket.h"
 
-UnixSocketFactory::UnixSocketFactory(const char* socketbase)
-:mSocketBase(NULL)
+TCPServerSocket::TCPServerSocket(const unsigned int clientTimeout) :
+    mSocket(-1),
+    mClientTimeout(clientTimeout)
 {
-    //doing all this manually to ensure <new> based memory allocation across the solution
-    ssize_t sizeInBytes = strnlen(socketbase, MAX_SIZE) + 1;
-    
-    //ensure a fairly decend size for socketbase is not overflowed
-    if (sizeInBytes > MAX_SIZE)
-        return;     //a socketbase of more than 255 chars may break the system on connect
-
-    mSocketBase = new char[sizeInBytes];
-    strncpy(mSocketBase, socketbase, sizeInBytes);
 }
 
-UnixSocketFactory::~UnixSocketFactory()
-{
-    if (mSocketBase != NULL)
-        delete [] mSocketBase;
-    mSocketBase = NULL;
+TCPServerSocket::~TCPServerSocket() {
+    if (mSocket > 0)
+        close(mSocket);
 }
 
-ICommunicationSocket* UnixSocketFactory::NewCommunicationSocket()
+void TCPServerSocket::init()
 {
-    UnixCommunicationSocket* sock = new UnixCommunicationSocket(mSocketBase);
+    /* init will always return directly with success if object was created with pre-existent socket */
+    if (mSocket > 0)
+        return;
+
+    struct sockaddr_in server_address;
+
+    mSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (mSocket < 0) {
+        throw("Failed to create socket");
+    }
+
+
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(CONFIG_AESMD_PORT);
+    server_address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+
+    socklen_t server_len = sizeof(server_address);
+    int rc = bind(mSocket, (sockaddr*)&server_address, server_len);
+    if (rc < 0) {
+        close(mSocket);
+        throw("Failed to create socket");
+    }
+
+    rc = listen(mSocket, 32);
+    if (rc < 0) {
+        close(mSocket);
+        throw("Error listening on socket"); 
+    }
+}
+
+ICommunicationSocket* TCPServerSocket::accept()
+{
+    int client_sockfd = (int) TEMP_FAILURE_RETRY(::accept(mSocket, NULL, NULL));
+    if (client_sockfd < 0)
+        return NULL;
+
+    NonBlockingTCPCommunicationSocket* sock = new NonBlockingTCPCommunicationSocket(client_sockfd);
+
     bool initializationSuccessfull = false;
 
     if (sock != NULL)
@@ -70,6 +103,11 @@ ICommunicationSocket* UnixSocketFactory::NewCommunicationSocket()
         delete sock;
         sock = NULL;
     }
-    
+    else
+    {
+        //set AESM specific timeout for operations with client sockets
+        sock->setTimeout(mClientTimeout);
+    }
+
     return sock;
 }

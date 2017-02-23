@@ -31,10 +31,10 @@
 #ifndef _PSW_COMMON_INC_SOCKETCONFIG_H
 #define _PSW_COMMON_INC_SOCKETCONFIG_H
 
+#ifndef CONFIG_AESMD_PORT
+    #define CONFIG_AESMD_PORT 34343
+#endif /* CONFIG_AESMD_PORT */
 
-#ifndef CONFIG_SOCKET_PATH
-    #define CONFIG_SOCKET_PATH "sgx_aesm_socket_base"
-#endif /* CONFIG_SOCKET_PATH */
 
 #endif
 

@@ -34,10 +34,6 @@
 
 #include <SocketConfig.h>
 
-#ifndef CONFIG_SOCKET_PATH
-#error "CONFIG_SOCKET_PATH is not defined"
-#endif
-
 #include <string>
 
 AEServices* AEServicesProvider::mProviderInstance = NULL;
@@ -49,9 +45,7 @@ AEServices* AEServicesProvider::GetServicesProvider()
     if (mProviderInstance)
         return mProviderInstance;
 
-    const char *socketbase = CONFIG_SOCKET_PATH;
-    
-    mProviderInstance = new AEServicesImpl(socketbase);
+    mProviderInstance = new AEServicesImpl();
 
     return mProviderInstance;
 }

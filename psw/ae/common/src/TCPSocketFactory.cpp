@@ -28,42 +28,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef __AE_NON_BLOCKING_COMM_SOCKET_H
-#define __AE_NON_BLOCKING_COMM_SOCKET_H
+#include <TCPSocketFactory.h>
+#include <TCPCommunicationSocket.h>
 
-#include <UnixCommunicationSocket.h>
+#include <stdlib.h>
+#include <string.h>
 
-#define MAX_EVENTS  12
+#define MAX_SIZE 255
 
-class NonBlockingUnixCommunicationSocket : public UnixCommunicationSocket
+TCPSocketFactory::TCPSocketFactory()
 {
-public:
-    NonBlockingUnixCommunicationSocket(const char* socketbase) : UnixCommunicationSocket(socketbase), mEvents(NULL), mEpoll(-1) {}    
-    NonBlockingUnixCommunicationSocket(int socket) : UnixCommunicationSocket(socket), mEvents(NULL), mEpoll(-1) {}
+}
 
-    ~NonBlockingUnixCommunicationSocket();
+TCPSocketFactory::~TCPSocketFactory()
+{
+}
 
-    bool  init();
-    char* readRaw(ssize_t length); //throw(SockDisconnectedException) = 0;
-    ssize_t  writeRaw(const char* data, ssize_t length);
-    int   getSockDescriptor();
-    bool wasTimeoutDetected();
-    bool setTimeout(uint32_t milliseconds);
+ICommunicationSocket* TCPSocketFactory::NewCommunicationSocket()
+{
+    TCPCommunicationSocket* sock = new TCPCommunicationSocket();
+    bool initializationSuccessfull = false;
 
-    void Cancel() const;
+    if (sock != NULL)
+        initializationSuccessfull = sock->init();
 
-protected:
-    bool MakeNonBlocking();
-    ssize_t partialRead(char* buffer, ssize_t maxLength);
-
-    //members
-    struct  epoll_event *mEvents;   //epoll for events on two sources: 0->special command pipe. 1->the socket
-    int     mEpoll;
-    int     mCommandPipe[2];
-private:
-    //non-copyable
-    NonBlockingUnixCommunicationSocket(const NonBlockingUnixCommunicationSocket&);
-    NonBlockingUnixCommunicationSocket& operator=(const NonBlockingUnixCommunicationSocket&);
-};
-
-#endif
+    if (initializationSuccessfull == false)
+    {
+        delete sock;
+        sock = NULL;
+    }
+    
+    return sock;
+}

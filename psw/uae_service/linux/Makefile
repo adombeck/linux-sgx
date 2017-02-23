@@ -92,11 +92,11 @@ IPC_SRC  := AECloseSessionRequest.cpp    \
              AESGXSwitchExtendedEpidGroupResponse.cpp \
              SocketTransporter.cpp \
              AEGetLaunchTokenResponse.cpp  \
-             UnixCommunicationSocket.cpp \
+             TCPCommunicationSocket.cpp \
              AEGetQuoteRequest.cpp \
-             UnixSocketFactory.cpp \
-             NonBlockingUnixCommunicationSocket.cpp \
-             NonBlockingUnixSocketFactory.cpp
+             TCPSocketFactory.cpp \
+             NonBlockingTCPCommunicationSocket.cpp \
+             NonBlockingTCPSocketFactory.cpp
 
 PROTOBUF_SRC  :=  messages.pb.cc
 
