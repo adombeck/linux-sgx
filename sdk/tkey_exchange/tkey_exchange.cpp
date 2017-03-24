@@ -595,15 +595,16 @@ sgx_status_t sgx_ra_init_ex(
     if(!p_pub_key || !p_context)
         return SGX_ERROR_INVALID_PARAMETER;
 
-    if(!sgx_is_within_enclave(p_pub_key, sizeof(sgx_ec256_public_t)))
-        return SGX_ERROR_INVALID_PARAMETER;
-
-    //derive_key_cb can be NULL
-    if (NULL != derive_key_cb &&
-        !sgx_is_within_enclave((const void*)derive_key_cb, 0))
-    {
-        return SGX_ERROR_INVALID_PARAMETER;
-    }
+// XXX: Uncomment after fixing sgx_is_within_enclave with graphene
+//    if(!sgx_is_within_enclave(p_pub_key, sizeof(sgx_ec256_public_t)))
+//        return SGX_ERROR_INVALID_PARAMETER;
+//
+//    //derive_key_cb can be NULL
+//    if (NULL != derive_key_cb &&
+//        !sgx_is_within_enclave((const void*)derive_key_cb, 0))
+//    {
+//        return SGX_ERROR_INVALID_PARAMETER;
+//    }
 
     ret = sgx_ecc256_open_context(&ecc_state);
     if(SGX_SUCCESS != ret)
