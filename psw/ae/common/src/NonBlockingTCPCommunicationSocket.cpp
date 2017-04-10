@@ -33,7 +33,7 @@
 #define __STDC_LIMIT_MACROS
 #endif
 #include <stdint.h>
-#include <NonBlockingUnixCommunicationSocket.h>
+#include <NonBlockingTCPCommunicationSocket.h>
 #include <arch.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -44,7 +44,7 @@
 #include <sys/epoll.h>
 #include <string.h>
 
-NonBlockingUnixCommunicationSocket::~NonBlockingUnixCommunicationSocket()
+NonBlockingTCPCommunicationSocket::~NonBlockingTCPCommunicationSocket()
 {
    if (mEvents != NULL)
         delete [] mEvents;
@@ -56,7 +56,7 @@ NonBlockingUnixCommunicationSocket::~NonBlockingUnixCommunicationSocket()
 }
 
 se_static_assert(MAX_EVENTS<=UINT32_MAX/sizeof(struct epoll_event));
-bool  NonBlockingUnixCommunicationSocket::init()
+bool  NonBlockingTCPCommunicationSocket::init()
 {
     //create the epoll structure
     mEpoll = epoll_create(1); 
@@ -79,7 +79,7 @@ bool  NonBlockingUnixCommunicationSocket::init()
     int registerCommand = epoll_ctl (mEpoll, EPOLL_CTL_ADD, mCommandPipe[0], &event);
 
     //connect to the AESM - blocking connect    
-    bool connectInit = UnixCommunicationSocket::init();
+    bool connectInit = TCPCommunicationSocket::init();
 
     //register the event
     event.data.fd = mSocket;
@@ -102,7 +102,7 @@ bool  NonBlockingUnixCommunicationSocket::init()
     return MakeNonBlocking();
 }
 
-char* NonBlockingUnixCommunicationSocket::readRaw(ssize_t length)
+char* NonBlockingTCPCommunicationSocket::readRaw(ssize_t length)
 {
     if (mSocket == -1)
         return NULL;
@@ -241,7 +241,7 @@ char* NonBlockingUnixCommunicationSocket::readRaw(ssize_t length)
 /**
 * Read no more than maxLength bytes
 */
-ssize_t NonBlockingUnixCommunicationSocket::partialRead(char* buffer, ssize_t maxLength)
+ssize_t NonBlockingTCPCommunicationSocket::partialRead(char* buffer, ssize_t maxLength)
 {
     ssize_t step = 0;
     ssize_t chunkSize = (maxLength < 512 ? maxLength : 512);
@@ -267,7 +267,7 @@ ssize_t NonBlockingUnixCommunicationSocket::partialRead(char* buffer, ssize_t ma
     return totalRead;
 }
 
-ssize_t  NonBlockingUnixCommunicationSocket::writeRaw(const char* data, ssize_t length)
+ssize_t  NonBlockingTCPCommunicationSocket::writeRaw(const char* data, ssize_t length)
 {
     if (mSocket == -1)
         return -1; 
@@ -400,23 +400,23 @@ ssize_t  NonBlockingUnixCommunicationSocket::writeRaw(const char* data, ssize_t 
     return total_write;
 }
 
-int   NonBlockingUnixCommunicationSocket::getSockDescriptor()
+int   NonBlockingTCPCommunicationSocket::getSockDescriptor()
 {
-    return UnixCommunicationSocket::getSockDescriptor();
+    return TCPCommunicationSocket::getSockDescriptor();
 }
 
-bool  NonBlockingUnixCommunicationSocket::wasTimeoutDetected()
+bool  NonBlockingTCPCommunicationSocket::wasTimeoutDetected()
 {
-    return UnixCommunicationSocket::wasTimeoutDetected();
+    return TCPCommunicationSocket::wasTimeoutDetected();
 }
 
-bool  NonBlockingUnixCommunicationSocket::setTimeout(uint32_t milliseconds)
+bool  NonBlockingTCPCommunicationSocket::setTimeout(uint32_t milliseconds)
 {
     mTimeoutMseconds = milliseconds;
     return true; 
 }
 
-bool  NonBlockingUnixCommunicationSocket::MakeNonBlocking()
+bool  NonBlockingTCPCommunicationSocket::MakeNonBlocking()
 {
     int flags, ret;
 
@@ -436,7 +436,7 @@ bool  NonBlockingUnixCommunicationSocket::MakeNonBlocking()
     return true;
 }
 
-void  NonBlockingUnixCommunicationSocket::Cancel() const
+void  NonBlockingTCPCommunicationSocket::Cancel() const
 {
     //write anything on the pipe
     char cmd = '1';

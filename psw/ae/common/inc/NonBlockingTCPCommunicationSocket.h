@@ -28,29 +28,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef __AE_SERVICES_IMPL_H__
-#define __AE_SERVICES_IMPL_H__
+#ifndef __AE_NON_BLOCKING_COMM_SOCKET_H
+#define __AE_NON_BLOCKING_COMM_SOCKET_H
 
-#include <AEServicesProvider.h>
-#include <AEServices.h>
+#include <TCPCommunicationSocket.h>
 
-class ITransporter;
+#define MAX_EVENTS  12
 
-class AEServicesImpl : public AEServices{
-    public:
-        ~AEServicesImpl();
-        virtual uae_oal_status_t InternalInterface(IAERequest* request, IAEResponse* response, uint32_t timeout_msec =0);
+class NonBlockingTCPCommunicationSocket : public TCPCommunicationSocket
+{
+public:
+    NonBlockingTCPCommunicationSocket() : TCPCommunicationSocket(), mEvents(NULL), mEpoll(-1) {}    
+    NonBlockingTCPCommunicationSocket(int socket) : TCPCommunicationSocket(socket), mEvents(NULL), mEpoll(-1) {}
 
-        friend AEServices* AEServicesProvider::GetServicesProvider();
+    ~NonBlockingTCPCommunicationSocket();
 
-    protected:
-        AEServicesImpl();
-        static bool     mBoundToService;
-        ITransporter*   mTransporter;       //the internal interface to the AESM
+    bool  init();
+    char* readRaw(ssize_t length); //throw(SockDisconnectedException) = 0;
+    ssize_t  writeRaw(const char* data, ssize_t length);
+    int   getSockDescriptor();
+    bool wasTimeoutDetected();
+    bool setTimeout(uint32_t milliseconds);
 
-    private:
-        AEServicesImpl& operator=(const AEServicesImpl&);
-        AEServicesImpl(const AEServicesImpl&);
+    void Cancel() const;
+
+protected:
+    bool MakeNonBlocking();
+    ssize_t partialRead(char* buffer, ssize_t maxLength);
+
+    //members
+    struct  epoll_event *mEvents;   //epoll for events on two sources: 0->special command pipe. 1->the socket
+    int     mEpoll;
+    int     mCommandPipe[2];
+private:
+    //non-copyable
+    NonBlockingTCPCommunicationSocket(const NonBlockingTCPCommunicationSocket&);
+    NonBlockingTCPCommunicationSocket& operator=(const NonBlockingTCPCommunicationSocket&);
 };
 
 #endif

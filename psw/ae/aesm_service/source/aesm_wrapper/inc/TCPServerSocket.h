@@ -28,25 +28,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef __AE_UNIX_SOCKET_FACTORY_H
-#define __AE_UNIX_SOCKET_FACTORY_H
+#ifndef _UNIX_SERVER_SOCKET_H
+#define _UNIX_SERVER_SOCKET_H
 
-#include <ISocketFactory.h>
+/*
+ *  Interface for the server socket;
+ *  Will be used to accept connections from clients.
+**/
+#include "IServerSocket.h"
 
-class UnixSocketFactory : public ISocketFactory
+class TCPServerSocket: public IServerSocket
 {
 public:
-    UnixSocketFactory(const char* socketbase);
-    ~UnixSocketFactory();
+    TCPServerSocket(const unsigned int clientTimeout = 0);
+    virtual ~TCPServerSocket();
 
-    ICommunicationSocket* NewCommunicationSocket();
+    virtual void                    init();
+    virtual ICommunicationSocket*   accept();
 
-protected:
-    char* mSocketBase;
+    virtual int getSockDescriptor() { return mSocket; }
+
 private:
-    UnixSocketFactory(const UnixSocketFactory&);                 // Prevent copy-construction
-    UnixSocketFactory& operator=(const UnixSocketFactory&);      // Prevent assignment
-
+    TCPServerSocket& operator=(const TCPServerSocket&);
+    TCPServerSocket(const TCPServerSocket&);
+    int           mSocket;
+    unsigned int  mClientTimeout;
 };
 
 #endif

@@ -28,43 +28,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef __AE_UNIX_SOCKET_GATEWAY_H
-#define __AE_UNIX_SOCKET_GATEWAY_H
+#include <NonBlockingTCPCommunicationSocket.h>
+#include <NonBlockingTCPSocketFactory.h>
 
-#include <ICommunicationSocket.h>
-#include <sys/time.h>
+ICommunicationSocket* NonBlockingTCPSocketFactory::NewCommunicationSocket()
+{
+    NonBlockingTCPCommunicationSocket* sock = new NonBlockingTCPCommunicationSocket();
+    bool initializationSuccessfull = false;
 
-class UnixCommunicationSocket : public ICommunicationSocket{
-    public:
-        UnixCommunicationSocket(const char* socketbase);
-        UnixCommunicationSocket(int socket);
+    if (sock != NULL)
+        initializationSuccessfull = sock->init();
 
-        ~UnixCommunicationSocket();
+    if (initializationSuccessfull == false)
+    {
+        delete sock;
+        sock = NULL;
+    }
 
-        virtual bool init();
-        virtual ssize_t writeRaw(const char* data, ssize_t length);
-        virtual char* readRaw(ssize_t length);// throw(SockDisconnectedException);
+    return sock;
 
-        void disconnect();
-        virtual int getSockDescriptor();
-
-        //timeout
-        virtual bool setTimeout(uint32_t timeout_milliseconds);
-        virtual bool wasTimeoutDetected() { return mWasTimeout; }    
-    protected:
-        char*   mSocketBase;
-        bool    mWasTimeout;
-
-        void MarkStartTime();
-        bool CheckForTimeout();
-        
-        struct timeval mStartTime;
-        uint32_t mTimeoutMseconds;
-
-    private:
-        //non-copyable
-        UnixCommunicationSocket(const UnixCommunicationSocket&);
-        UnixCommunicationSocket& operator=(const UnixCommunicationSocket&);
-};
-
-#endif
+}

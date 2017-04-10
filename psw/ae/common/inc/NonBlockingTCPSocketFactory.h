@@ -31,13 +31,13 @@
 #ifndef __AE_NON_BLOCKING_UNIX_SOCKET_FACTORY_H
 #define __AE_NON_BLOCKING_UNIX_SOCKET_FACTORY_H
 
-#include <UnixSocketFactory.h>
+#include <TCPSocketFactory.h>
 
-class NonBlockingUnixSocketFactory : public UnixSocketFactory
+class NonBlockingTCPSocketFactory : public TCPSocketFactory
 {
 public:
-    NonBlockingUnixSocketFactory(const char* socketbase) : UnixSocketFactory(socketbase) {}
-    ~NonBlockingUnixSocketFactory() {}
+    NonBlockingTCPSocketFactory() : TCPSocketFactory() {}
+    ~NonBlockingTCPSocketFactory() {}
 
     ICommunicationSocket* NewCommunicationSocket();
 }; 

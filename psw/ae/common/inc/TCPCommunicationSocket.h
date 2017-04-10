@@ -28,32 +28,42 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef _UNIX_SERVER_SOCKET_H
-#define _UNIX_SERVER_SOCKET_H
+#ifndef __AE_UNIX_SOCKET_GATEWAY_H
+#define __AE_UNIX_SOCKET_GATEWAY_H
 
-/*
- *  Interface for the server socket;
- *  Will be used to accept connections from clients.
-**/
-#include "IServerSocket.h"
+#include <ICommunicationSocket.h>
+#include <sys/time.h>
 
-class UnixServerSocket: public IServerSocket
-{
-public:
-    UnixServerSocket(const char* socketbase, const unsigned int clientTimeout = 0);
-    virtual ~UnixServerSocket();
+class TCPCommunicationSocket : public ICommunicationSocket{
+    public:
+        TCPCommunicationSocket();
+        TCPCommunicationSocket(int socket);
 
-    virtual void                    init();
-    virtual ICommunicationSocket*   accept();
+        ~TCPCommunicationSocket();
 
-    virtual int getSockDescriptor() { return mSocket; }
+        virtual bool init();
+        virtual ssize_t writeRaw(const char* data, ssize_t length);
+        virtual char* readRaw(ssize_t length);// throw(SockDisconnectedException);
 
-private:
-    UnixServerSocket& operator=(const UnixServerSocket&);
-    UnixServerSocket(const UnixServerSocket&);
-    const char*   mSocketBase;
-    int           mSocket;
-    unsigned int  mClientTimeout;
+        void disconnect();
+        virtual int getSockDescriptor();
+
+        //timeout
+        virtual bool setTimeout(uint32_t timeout_milliseconds);
+        virtual bool wasTimeoutDetected() { return mWasTimeout; }    
+    protected:
+        bool    mWasTimeout;
+
+        void MarkStartTime();
+        bool CheckForTimeout();
+        
+        struct timeval mStartTime;
+        uint32_t mTimeoutMseconds;
+
+    private:
+        //non-copyable
+        TCPCommunicationSocket(const TCPCommunicationSocket&);
+        TCPCommunicationSocket& operator=(const TCPCommunicationSocket&);
 };
 
 #endif

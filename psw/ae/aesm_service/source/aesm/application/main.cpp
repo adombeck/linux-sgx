@@ -30,14 +30,12 @@
  */
 #include <signal.h>
 #include <unistd.h>
-#include <UnixServerSocket.h>
+#include <TCPServerSocket.h>
 #include <CAESMServer.h>
 #include <CSelector.h>
 #include <AESMLogicWrapper.h>
 #include <curl/curl.h>
 #include <error_report.h>
-
-#include <SocketConfig.h>
 
 #include <iostream>
 
@@ -101,7 +99,7 @@ int main() {
                 delete aesmLogic;
                 exit(1);
             }
-            UnixServerSocket* serverSock = new UnixServerSocket(CONFIG_SOCKET_PATH);
+            TCPServerSocket* serverSock = new TCPServerSocket();
 
             CSelector* selector = new CSelector(serverSock);
             server = new CAESMServer(serverSock, selector, aesmLogic);
