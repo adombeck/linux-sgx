@@ -20,10 +20,10 @@ echo "Cleaning..."
 make clean
 
 echo "Building SDK..."
-make -C sdk/ USE_OPT_LIBS=1 DEBUG=1
+make -j8 -C sdk/ USE_OPT_LIBS=1 DEBUG=1
 
 echo "Building PSW..."
-make -C psw/ USE_OPT_LIBS=1 DEBUG=1
+make -j8 -C psw/ USE_OPT_LIBS=1 DEBUG=1
 
 ./install_sdk.sh
 
