@@ -48,6 +48,12 @@
 // add a version to tservice.
 SGX_ACCESS_VERSION(tservice, 1)
 
+// PATCHED FOR PYTHON-SGX: Uncommented all calls to sgx_is_within_enclave() in sgx_create_report(), because they do not
+// work when executed with Graphene.
+// We only call sgx_create_report() with arguments allocated by the enclave, so it should not impact security that we
+// skip these checks.
+// XXX: Check if no other functions use sgx_create_report() with arguments which could be allocated outside the enclave
+// XXX: Patch Graphene to make sgx_is_within_enclave() work
 sgx_status_t sgx_create_report(const sgx_target_info_t *target_info, const sgx_report_data_t *report_data, sgx_report_t *report)
 {
     int i = 0;
@@ -56,8 +62,8 @@ sgx_status_t sgx_create_report(const sgx_target_info_t *target_info, const sgx_r
     // target_info is allowed to be NULL, but if it is not NULL, it must be within the enclave
     if(target_info)
     {
-        if (!sgx_is_within_enclave(target_info, sizeof(*target_info)))
-            return SGX_ERROR_INVALID_PARAMETER;
+//        if (!sgx_is_within_enclave(target_info, sizeof(*target_info)))
+//            return SGX_ERROR_INVALID_PARAMETER;
 
         for(i=0; i<SGX_TARGET_INFO_RESERVED1_BYTES; ++i)
         {
@@ -72,12 +78,12 @@ sgx_status_t sgx_create_report(const sgx_target_info_t *target_info, const sgx_r
         }
     }
     // report_data is allowed to be NULL, but if it is not NULL, it must be within the enclave
-    if(report_data && !sgx_is_within_enclave(report_data, sizeof(*report_data)))
-    {
-        return SGX_ERROR_INVALID_PARAMETER;
-    }
+//    if(report_data && !sgx_is_within_enclave(report_data, sizeof(*report_data)))
+//    {
+//        return SGX_ERROR_INVALID_PARAMETER;
+//    }
     // report must be within the enclave
-    if(!report || !sgx_is_within_enclave(report, sizeof(*report)))
+    if(!report /*|| !sgx_is_within_enclave(report, sizeof(*report))*/)
     {
         return SGX_ERROR_INVALID_PARAMETER;
     }

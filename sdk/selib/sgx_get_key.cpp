@@ -48,6 +48,12 @@
 // add a version to tservice.
 SGX_ACCESS_VERSION(tservice, 2)
 
+// PATCHED FOR PYTHON-SGX: Uncommented all calls to sgx_is_within_enclave() in sgx_get_key(), because they do not
+// work when executed with Graphene.
+// We only call sgx_get_key() with arguments allocated by the enclave, so it should not impact security that we
+// skip these checks.
+// XXX: Check if no other functions use sgx_get_key() with arguments which could be allocated outside the enclave
+// XXX: Patch Graphene to make sgx_is_within_enclave() work
 sgx_status_t sgx_get_key(const sgx_key_request_t *key_request, sgx_key_128bit_t *key)
 {
     sgx_status_t err = SGX_ERROR_UNEXPECTED;
@@ -61,7 +67,7 @@ sgx_status_t sgx_get_key(const sgx_key_request_t *key_request, sgx_key_128bit_t 
     // check parameters
     //
     // key_request must be within the enclave
-    if(!key_request || !sgx_is_within_enclave(key_request, sizeof(*key_request)))
+    if(!key_request /* || !sgx_is_within_enclave(key_request, sizeof(*key_request))*/)
     {
         err = SGX_ERROR_INVALID_PARAMETER;
         goto CLEANUP;
@@ -83,7 +89,7 @@ sgx_status_t sgx_get_key(const sgx_key_request_t *key_request, sgx_key_128bit_t 
     }
 
     // key must be within the enclave
-    if(!key || !sgx_is_within_enclave(key, sizeof(*key)))
+    if(!key /* || !sgx_is_within_enclave(key, sizeof(*key))*/)
     {
         err = SGX_ERROR_INVALID_PARAMETER;
         goto CLEANUP;

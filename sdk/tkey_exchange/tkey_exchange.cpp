@@ -560,6 +560,13 @@ extern "C" sgx_status_t sgx_ra_get_msg3_trusted(
     return se_ret;
 }
 
+// PATCHED FOR PYTHON-SGX: Uncommented all calls to sgx_is_within_enclave() in sgx_ra_init_ex(), because they do not
+// work when executed with Graphene.
+// We only call sgx_ra_init_ex() with arguments allocated by the enclave, so it should not impact security that we
+// skip these checks.
+// XXX: Check if no other functions use sgx_ra_init_ex() with arguments which could be allocated outside the enclave
+// XXX: Patch Graphene to make sgx_is_within_enclave() work
+
 // TKE interface for isv enclaves
 sgx_status_t sgx_ra_init_ex(
     const sgx_ec256_public_t *p_pub_key,
@@ -595,7 +602,6 @@ sgx_status_t sgx_ra_init_ex(
     if(!p_pub_key || !p_context)
         return SGX_ERROR_INVALID_PARAMETER;
 
-// XXX: Uncomment after fixing sgx_is_within_enclave with graphene
 //    if(!sgx_is_within_enclave(p_pub_key, sizeof(sgx_ec256_public_t)))
 //        return SGX_ERROR_INVALID_PARAMETER;
 //

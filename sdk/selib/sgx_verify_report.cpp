@@ -48,6 +48,12 @@
 // add a version to tservice.
 SGX_ACCESS_VERSION(tservice, 3)
 
+// PATCHED FOR PYTHON-SGX: Uncommented call to sgx_is_within_enclave() in sgx_verify_report(), because it doesn't work
+// when executed with Graphene.
+// We only call sgx_verify_report() with arguments allocated by the enclave, so it should not impact security that we
+// skip these checks.
+// XXX: Check if no other functions use sgx_verify_report() with arguments which could be allocated outside the enclave
+// XXX: Patch Graphene to make sgx_is_within_enclave() work
 sgx_status_t sgx_verify_report(const sgx_report_t *report)
 {
     sgx_mac_t mac;
@@ -55,7 +61,7 @@ sgx_status_t sgx_verify_report(const sgx_report_t *report)
     sgx_key_128bit_t key;
     sgx_status_t err = SGX_ERROR_UNEXPECTED;
     //check parameter
-    if(!report||!sgx_is_within_enclave(report, sizeof(*report)))
+    if(!report /*||!sgx_is_within_enclave(report, sizeof(*report))*/)
     {
         return SGX_ERROR_INVALID_PARAMETER;
     }
@@ -82,6 +88,7 @@ sgx_status_t sgx_verify_report(const sgx_report_t *report)
         return err; // err must be SGX_ERROR_OUT_OF_MEMORY or SGX_ERROR_UNEXPECTED
     }
     //get the report mac
+
     err = sgx_rijndael128_cmac_msg((sgx_cmac_128bit_key_t*)&key, (const uint8_t *)(&report->body), sizeof(sgx_report_body_t), &mac);
     memset_s (&key, sizeof(sgx_key_128bit_t), 0, sizeof(sgx_key_128bit_t));
     if (SGX_SUCCESS != err)
